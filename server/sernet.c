@@ -713,7 +713,7 @@ enum server_events server_sniff_all_input(void)
 	  && S_S_RUNNING == server_state()
 	  && game.server.phase_timer
 	  && (timer_read_seconds(game.server.phase_timer)
-	      > game.tinfo.seconds_to_phasedone)) {
+              > game.tinfo.seconds_to_phasedone + game.server.phase_mask)) {
 	con_prompt_off();
 	return S_E_END_OF_TURN_TIMEOUT;
       }
@@ -902,7 +902,7 @@ enum server_events server_sniff_all_input(void)
       && S_S_RUNNING == server_state()
       && game.server.phase_timer
       && (timer_read_seconds(game.server.phase_timer)
-          > game.tinfo.seconds_to_phasedone)) {
+          > game.tinfo.seconds_to_phasedone + game.server.phase_mask)) {
     return S_E_END_OF_TURN_TIMEOUT;
   }
   if ((game.server.autosaves & (1 << AS_TIMER))
