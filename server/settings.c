@@ -466,6 +466,20 @@ static const struct sset_val_name *barbarians_name(int barbarians)
 }
 
 /****************************************************************************
+  Bombardment reveal mode accessor.
+****************************************************************************/
+static const struct sset_val_name *brem_name(int brem_type)
+{
+  switch (brem_type) {
+  NAME_CASE(BREM_ALL, "ALL", N_("All defenders and bombarder"));
+  NAME_CASE(BREM_BEST, "BEST", N_("Strongest defender and bombarder"));
+  NAME_CASE(BREM_ATTACKER, "ATTACKER", N_("Bombarder only"));
+  NAME_CASE(BREM_NONE, "NONE", N_("No units otherwise invisible"));
+  }
+  return NULL;
+}
+
+/****************************************************************************
   Revolution length type setting names accessor.
 ****************************************************************************/
 static const struct sset_val_name *revolentype_name(int revolentype)
@@ -2112,6 +2126,14 @@ static struct setting settings[] = {
           NULL, NULL, NULL,
           GAME_MIN_OCCUPYCHANCE, GAME_MAX_OCCUPYCHANCE, 
           GAME_DEFAULT_OCCUPYCHANCE)
+  
+  GEN_ENUM("bombardment_reveal", game.server.bombardment_reveal,
+           SSET_RULES, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+           N_("Reveal units on bombardment"),
+           N_("Bombardment may reveal some units (the bombarder or "
+              "the defenders) to players that otherwise can not see them "
+              "but can see either the bombarder's or the bombarded tile"),
+           NULL, NULL, NULL, brem_name, GAME_DEFAULT_BOMBARDMENT_REVEAL)
 
   GEN_BOOL("autoattack", game.server.autoattack, SSET_RULES_FLEXIBLE, SSET_MILITARY,
            SSET_SITUATIONAL, SSET_TO_CLIENT,

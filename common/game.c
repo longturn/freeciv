@@ -368,6 +368,7 @@ static void game_defaults(void)
     game.server.auto_ai_toggle    = GAME_DEFAULT_AUTO_AI_TOGGLE;
     game.server.autoattack        = GAME_DEFAULT_AUTOATTACK;
     game.server.barbarianrate     = GAME_DEFAULT_BARBARIANRATE;
+    game.server.bombardment_reveal = GAME_DEFAULT_BOMBARDMENT_REVEAL;
     game.server.civilwarsize      = GAME_DEFAULT_CIVILWARSIZE;
     game.server.connectmsg[0]     = '\0';
     game.server.conquercost       = GAME_DEFAULT_CONQUERCOST;

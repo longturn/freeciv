@@ -2069,8 +2069,11 @@ void handle_unit_change_activity(struct player *pplayer, int unit_id,
 
 /**************************************************************************
  Make sure everyone who can see combat does.
+ Caller sets non-NULL bestdef only if it is a bombardment and
+  game.server.bombardment_reveal == BREM_BEST
 **************************************************************************/
-static void see_combat(struct unit *pattacker, struct unit *pdefender)
+static void see_combat(struct unit *pattacker, struct unit *pdefender,
+                       bool bombard, const struct unit *bestdef)
 {
   struct packet_unit_short_info unit_att_short_packet, unit_def_short_packet;
   struct packet_unit_info unit_att_packet, unit_def_packet;
@@ -2108,13 +2111,16 @@ static void see_combat(struct unit *pattacker, struct unit *pdefender)
          * have changed orientation for combat. */
         if (pplayer == unit_owner(pattacker)) {
           send_packet_unit_info(pconn, &unit_att_packet);
-        } else {
+        } else if (!bombard || game.server.bombardment_reveal < BREM_NONE
+                   || can_player_see_unit(pplayer, pattacker)) {
           send_packet_unit_short_info(pconn, &unit_att_short_packet, FALSE);
         }
         
         if (pplayer == unit_owner(pdefender)) {
           send_packet_unit_info(pconn, &unit_def_packet);
-        } else {
+        } else if (!bombard || game.server.bombardment_reveal == BREM_ALL
+                   || can_player_see_unit(pplayer, pdefender)
+                   || pdefender == bestdef) {
           send_packet_unit_short_info(pconn, &unit_def_short_packet, FALSE);
         }
       }
@@ -2128,9 +2134,11 @@ static void see_combat(struct unit *pattacker, struct unit *pdefender)
 
 /**************************************************************************
  Send combat info to players.
+ Caller sets non-NULL bestdef only if it is a bombardment and
+  game.server.bombardment_reveal == BREM_BEST
 **************************************************************************/
 static void send_combat(struct unit *pattacker, struct unit *pdefender, 
-			int veteran, int bombard)
+			int veteran, int bombard, const struct unit *bestdef)
 {
   struct packet_unit_combat_info combat;
 
@@ -2146,16 +2154,25 @@ static void send_combat(struct unit *pattacker, struct unit *pdefender,
     if (map_is_known_and_seen(unit_tile(pattacker), other_player, V_MAIN)
         || map_is_known_and_seen(unit_tile(pdefender), other_player,
                                  V_MAIN)) {
-      lsend_packet_unit_combat_info(other_player->connections, &combat);
+      bool att_seen = can_player_see_unit(other_player, pattacker);
+      bool def_seen = can_player_see_unit(other_player, pdefender);
+      bool att_sent = !bombard
+        || att_seen || game.server.bombardment_reveal < BREM_NONE;
+      bool def_sent = !bombard || def_seen
+       || game.server.bombardment_reveal == BREM_ALL || pdefender == bestdef;
+      
+      if (!bombard || (att_sent && def_sent)) {
+        lsend_packet_unit_combat_info(other_player->connections, &combat);
+      }
 
       /* 
        * Remove the client knowledge of the units.  This corresponds to the
        * send_packet_unit_short_info calls up above.
        */
-      if (!can_player_see_unit(other_player, pattacker)) {
+      if (!att_seen && att_sent) {
 	unit_goes_out_of_sight(other_player, pattacker);
       }
-      if (!can_player_see_unit(other_player, pdefender)) {
+      if (!def_seen && def_sent) {
 	unit_goes_out_of_sight(other_player, pdefender);
       }
     }
@@ -2178,12 +2195,17 @@ static bool unit_bombard(struct unit *punit, struct tile *ptile)
 {
   struct player *pplayer = unit_owner(punit);
   struct city *pcity = tile_city(ptile);
+  bool damaged = FALSE;
 
   log_debug("Start bombard: %s %s to %d, %d.",
             nation_rule_name(nation_of_player(pplayer)),
             unit_rule_name(punit), TILE_XY(ptile));
 
   unit_list_iterate_safe(ptile->units, pdefender) {
+    struct unit *bestdef
+     = BREM_BEST == game.server.bombardment_reveal 
+       ? get_defender(punit, ptile)
+       : NULL;
 
     /* Sanity checks */
     fc_assert_ret_val_msg(!pplayers_non_attack(unit_owner(punit),
@@ -2201,6 +2223,8 @@ static bool unit_bombard(struct unit *punit, struct tile *ptile)
       bool adj;
       enum direction8 facing;
       int att_hp, def_hp;
+      bool def_seen = (BREM_ALL == game.server.bombardment_reveal)
+        || can_player_see_unit(pplayer, pdefender) || bestdef == pdefender;
 
       adj = base_get_direction_for_step(punit->tile, pdefender->tile, &facing);
 
@@ -2214,13 +2238,15 @@ static bool unit_bombard(struct unit *punit, struct tile *ptile)
 
       unit_versus_unit(punit, pdefender, TRUE, &att_hp, &def_hp);
 
-      notify_player(pplayer, ptile,
-                    E_UNIT_WIN_ATT, ftc_server,
-                    /* TRANS: Your Bomber bombards the English Rifleman.*/
-                    _("Your %s bombards the %s %s."),
-                    unit_name_translation(punit),
-                    nation_adjective_for_player(unit_owner(pdefender)),
-                    unit_name_translation(pdefender));
+      if (def_seen) {
+        notify_player(pplayer, ptile,
+                      E_UNIT_WIN_ATT, ftc_server,
+                      /* TRANS: Your Bomber bombards the English Rifleman.*/
+                      _("Your %s bombards the %s %s."),
+                      unit_name_translation(punit),
+                      nation_adjective_for_player(unit_owner(pdefender)),
+                      unit_name_translation(pdefender));
+      }
 
       notify_player(unit_owner(pdefender), ptile,
                     E_UNIT_WIN, ftc_server,
@@ -2230,17 +2256,28 @@ static bool unit_bombard(struct unit *punit, struct tile *ptile)
                     nation_adjective_for_player(pplayer),
                     unit_name_translation(punit));
 
-      see_combat(punit, pdefender);
+      see_combat(punit, pdefender, TRUE, bestdef);
 
-      punit->hp = att_hp;
-      pdefender->hp = def_hp;
+      if (pdefender->hp > def_hp) {
+        damaged = TRUE;
+        pdefender->hp = def_hp;
+      }
 
-      send_combat(punit, pdefender, 0, 1);
+      send_combat(punit, pdefender, 0, 1, bestdef);
   
       send_unit_info(NULL, pdefender);
     }
 
   } unit_list_iterate_safe_end;
+
+  notify_player(pplayer, ptile,
+                damaged ? E_UNIT_WIN_ATT : E_UNIT_LOST_ATT, ftc_server,
+                damaged
+                ? _("Bombardment of your %s was succesful, "
+                    "enemy forces damaged.")
+                : _("Your bombarding %s failed "
+                    "to cause any damage to enemy forces."),
+                unit_name_translation(punit));
 
   punit->moves_left = 0;
 
@@ -2334,7 +2371,7 @@ static void unit_attack_handling(struct unit *punit, struct unit *pdefender)
     unit_transport_unload_send(punit);
   }
 
-  see_combat(punit, pdefender);
+  see_combat(punit, pdefender, FALSE, NULL);
 
   punit->hp = att_hp;
   pdefender->hp = def_hp;
@@ -2380,7 +2417,7 @@ static void unit_attack_handling(struct unit *punit, struct unit *pdefender)
   vet = (pwinner->veteran == ((punit->hp > 0) ? old_unit_vet :
 	old_defender_vet)) ? 0 : 1;
 
-  send_combat(punit, pdefender, vet, 0);
+  send_combat(punit, pdefender, vet, 0, NULL);
 
   /* N.B.: unit_link always returns the same pointer. */
   sz_strlcpy(loser_link, unit_tile_link(ploser));
