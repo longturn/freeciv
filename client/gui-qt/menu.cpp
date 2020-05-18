@@ -15,6 +15,10 @@
 #include <fc_config.h>
 #endif
 
+// std
+#include <algorithm>
+#include <random>
+
 // Qt
 #include <QApplication>
 #include <QFileDialog>
@@ -305,24 +309,9 @@ void trade_generator::calculate()
   bool tdone;
 
   for (i = 0; i < 100; i++) {
-    int count = cities.size();
-    int cities_ids[count];
-    class trade_city *cities_order[count];
-    int n;
-
     tdone = true;
-
-    for (n = 0; n < count; n++) {
-      cities_ids[n] = n;
-      cities_order[n] = cities[n];
-    }
-    array_shuffle(cities_ids, count);
-
-    cities.clear();
-    for (n = 0; n < count; n++) {
-      cities.append(cities_order[cities_ids[n]]);
-    }
-
+    std::shuffle(cities.begin(), cities.end(),
+                 std::mt19937(std::random_device()()));
     lines.clear();
     foreach (tc, cities) {
       tc->pos_cities.clear();
@@ -520,6 +509,8 @@ void trade_generator::find_certain_routes_inner(trade_city *tc)
 }
 
 /**************************************************************************
+=======
+>>>>>>> Fix crash in Qt client trade route planning
   Adds routes for cities which can only have maximum possible trade routes
 **************************************************************************/
 void trade_generator::find_certain_routes()
