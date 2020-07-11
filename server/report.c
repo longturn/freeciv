@@ -139,6 +139,10 @@ static int get_economics(const struct player *pplayer);
 static int get_pollution(const struct player *pplayer);
 static int get_mil_service(const struct player *pplayer);
 static int get_culture(const struct player *pplayer);
+static int get_pop(const struct player *pplayer);  /* this would better be named get_citizenunits or such */
+static int get_cities(const struct player *pplayer);
+static int get_mil_units(const struct player *pplayer);
+
 
 static const char *area_to_text(int value);
 static const char *percent_to_text(int value);
@@ -148,6 +152,9 @@ static const char *science_to_text(int value);
 static const char *mil_service_to_text(int value);
 static const char *pollution_to_text(int value);
 static const char *culture_to_text(int value);
+static const char *citizenunits_to_text(int value);
+static const char *cities_to_text(int value);
+static const char *mil_units_to_text(int value);
 
 #define GOOD_PLAYER(p) ((p)->is_alive && !is_barbarian(p))
 #define AI_PLAYER(p) ((p)->ai_controlled)
@@ -163,6 +170,8 @@ static struct dem_row {
   bool greater_values_are_better;
 } rowtable[] = {
   {'N', N_("Population"),       get_population,  population_to_text,  TRUE },
+  {'n', N_("Population"),       get_pop,         citizenunits_to_text,TRUE },
+  {'c', N_("Cities"),           get_cities,      cities_to_text,      TRUE },
   {'A', N_("Land Area"),        get_landarea,    area_to_text,        TRUE },
   {'S', N_("Settled Area"),     get_settledarea, area_to_text,        TRUE },
   {'R', N_("Research Speed"),   get_research,    science_to_text,     TRUE },
@@ -171,6 +180,7 @@ static struct dem_row {
   {'P', N_("Production"),       get_production,  production_to_text,  TRUE },
   {'E', N_("Economics"),        get_economics,   economics_to_text,   TRUE },
   {'M', N_("Military Service"), get_mil_service, mil_service_to_text, FALSE },
+  {'m', N_("Military Units"),   get_mil_units,   mil_units_to_text,   TRUE },
   {'O', N_("Pollution"),        get_pollution,   pollution_to_text,   FALSE },
   {'C', N_("Culture"),          get_culture,     culture_to_text,     TRUE }
 };
@@ -551,6 +561,14 @@ static int get_mil_service(const struct player *pplayer)
 }
 
 /****************************************************************************
+  Military units
+****************************************************************************/
+static int get_mil_units(const struct player *pplayer)
+{
+  return pplayer->score.units;
+}
+
+/****************************************************************************
   Number of cities
 ****************************************************************************/
 static int get_cities(const struct player *pplayer)
@@ -855,6 +873,8 @@ static const char *mil_service_to_text(int value)
   return value_units(value, PL_(" month", " months", value));
 }
 
+
+
 /**************************************************************************
   Construct string containing value followed by unit suitable for
   pollution stats.
@@ -872,6 +892,33 @@ static const char *culture_to_text(int value)
 {
   /* TRANS: Unit(s) of culture */
   return value_units(value, PL_(" point", " points", value));
+}
+
+/**************************************************************************
+  Construct string containing value followed by unit suitable for
+  citizen unit stats.
+**************************************************************************/
+static const char *citizenunits_to_text(int value)
+{
+  return value_units(value, PL_(" citizen unit", " citizen units", value));
+}
+
+/**************************************************************************
+  Construct string containing value followed by unit suitable for
+  military unit stats.
+**************************************************************************/
+static const char *mil_units_to_text(int value)
+{
+  return value_units(value, PL_(" unit", " units", value));
+}
+
+/**************************************************************************
+  Construct string containing value followed by unit suitable for
+  city stats.
+**************************************************************************/
+static const char *cities_to_text(int value)
+{
+  return value_units(value, PL_(" city", " cities", value));
 }
 
 /**************************************************************************
