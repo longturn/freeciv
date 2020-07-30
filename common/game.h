@@ -164,6 +164,7 @@ struct civ_game {
       bool natural_city_names;
       int netwait;
       int num_phases;
+      int nuke_improvements;
       int occupychance;
       int onsetbarbarian;
       int pingtime;
@@ -624,6 +625,10 @@ extern struct civ_game game;
 #define GAME_DEFAULT_ONSETBARBARIAN  60
 #define GAME_MIN_ONSETBARBARIAN      0
 #define GAME_MAX_ONSETBARBARIAN      GAME_MAX_END_TURN
+
+#define GAME_DEFAULT_NUKE_IMPROVEMENTS   0
+#define GAME_MIN_NUKE_IMPROVEMENTS       0
+#define GAME_MAX_NUKE_IMPROVEMENTS     100
 
 #define GAME_DEFAULT_OCCUPYCHANCE    0
 #define GAME_MIN_OCCUPYCHANCE        0

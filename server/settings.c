@@ -2525,6 +2525,17 @@ static struct setting settings[] = {
           GAME_MIN_MGR_WORLDCHANCE, GAME_MAX_MGR_WORLDCHANCE,
           GAME_DEFAULT_MGR_WORLDCHANCE)
 
+  GEN_INT("nuke_improvements", game.server.nuke_improvements,
+          SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+          N_("Chance of a city improvement getting destroyed when city is nuked"),
+          N_("If set to 0, nukes will not destroy city improvements (default). "
+             "If set to 100, all city improvements will be destroyed when nuked. "
+             "Wonders and improvements that are hard to sabotage (like City Walls) "
+             "are always left intact."),
+          NULL, NULL, NULL,
+          GAME_MIN_NUKE_IMPROVEMENTS, GAME_MAX_NUKE_IMPROVEMENTS, 
+          GAME_DEFAULT_NUKE_IMPROVEMENTS)
+
   /* Meta options: these don't affect the internal rules of the game, but
    * do affect players.  Also options which only produce extra server
    * "output" and don't affect the actual game.

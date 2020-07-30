@@ -2594,9 +2594,26 @@ static void do_nuke_tile(struct player *pplayer, struct tile *ptile)
                     _("You nuked %s."),
                     city_link(pcity));
     }
+   
+    /* destroy improvements, 50 % chance each */
+    city_built_iterate(pcity, pimprove) {
+      /* only destroy regular improvements, not wonders, and not those
+       * that are especially protected from sabotage (e.g. Walls) */
+      if (   is_improvement(pimprove) 
+          && pimprove->sabotage == 100
+          && fc_rand(100) < game.server.nuke_improvements) {
+        notify_player(city_owner(pcity), city_tile(pcity), E_CITY_NUKED, ftc_server,
+                      _("%s destroyed in nuclear explosion!"),
+                      improvement_name_translation(pimprove));
+        city_remove_improvement(pcity, pimprove);
+      } 
+    } city_built_iterate_end;
+
 
     const int pop_loss = (game.server.nuke_pop_loss_pct * city_size_get(pcity)) / 100;
     city_reduce_size(pcity, pop_loss, pplayer, "nuke");
+
+    send_city_info(NULL, pcity);
   }
 
   if (fc_rand(2) == 1) {

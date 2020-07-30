@@ -414,6 +414,7 @@ static void game_defaults(void)
     game.server.nuclear_winter_percent = GAME_DEFAULT_NUCLEAR_WINTER_PERCENT;
     game.server.plrcolormode      = GAME_DEFAULT_PLRCOLORMODE;
     game.server.netwait           = GAME_DEFAULT_NETWAIT;
+    game.server.nuke_improvements = GAME_DEFAULT_NUKE_IMPROVEMENTS;
     game.server.occupychance      = GAME_DEFAULT_OCCUPYCHANCE;
     game.server.onsetbarbarian    = GAME_DEFAULT_ONSETBARBARIAN;
     game.server.phase_mode_stored = GAME_DEFAULT_PHASE_MODE;
