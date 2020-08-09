@@ -165,6 +165,7 @@ struct civ_game {
       int netwait;
       int num_phases;
       int nuke_improvements;
+      bool nuke_infra;
       int occupychance;
       int onsetbarbarian;
       int pingtime;
@@ -629,6 +630,8 @@ extern struct civ_game game;
 #define GAME_DEFAULT_NUKE_IMPROVEMENTS   0
 #define GAME_MIN_NUKE_IMPROVEMENTS       0
 #define GAME_MAX_NUKE_IMPROVEMENTS     100
+
+#define GAME_DEFAULT_NUKE_INFRA       FALSE
 
 #define GAME_DEFAULT_OCCUPYCHANCE    0
 #define GAME_MIN_OCCUPYCHANCE        0

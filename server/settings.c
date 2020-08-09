@@ -2536,6 +2536,15 @@ static struct setting settings[] = {
           GAME_MIN_NUKE_IMPROVEMENTS, GAME_MAX_NUKE_IMPROVEMENTS, 
           GAME_DEFAULT_NUKE_IMPROVEMENTS)
 
+  GEN_BOOL("nuke_infra", game.server.nuke_infra,
+           SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+           N_("Whether nukes destroy tile infrastructure (roads, irrigation, etc.)"),
+           N_("If disabled, nukes will not destroy infrastructure (default). "
+              "If enabled, nukes destroy infrastructure randomly, with higher-level "
+              "infra having a greater chance of destruction. "),
+           NULL, NULL, 
+           GAME_DEFAULT_NUKE_INFRA)
+
   /* Meta options: these don't affect the internal rules of the game, but
    * do affect players.  Also options which only produce extra server
    * "output" and don't affect the actual game.

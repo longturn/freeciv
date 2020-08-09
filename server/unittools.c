@@ -2547,6 +2547,52 @@ void send_all_known_units(struct conn_list *dest)
 }
 
 /**************************************************************************
+  Nuke man-made infrastructure from the countryside 
+**************************************************************************/
+static void do_nuke_tile_extras(struct player *pplayer, struct tile *ptile)
+{
+  struct city *pcity = tile_city(ptile);
+
+  extra_type_iterate(extra) {
+    const char *name = rule_name_get(&extra->name);
+    
+    /* Only destroy man-made infra -- leave the garbage and natural features */
+    if (extra->category != ECAT_INFRA || ! tile_has_extra(ptile, extra))
+      continue;
+
+    /* Don't destroy infra that cities always have, that might be confusing */
+    if (pcity && (   extra_has_flag(extra, EF_AUTO_ON_CITY_CENTER) 
+                  || extra_has_flag(extra, EF_ALWAYS_ON_CITY_CENTER)))
+      continue;
+
+    /* destroy about half randomly */
+    if (fc_rand(100) >= 50)
+      continue;
+    
+    /* If we destroy something, also destroy anything "on top" of it
+     * i.e. destroying a Road takes Railroad and Maglev with it.
+     * This uses 'hidden_by' from the ruleset, but doesn't recurse,
+     * so the lower level infra needs to by 'hidden_by' all upper level
+     * infra directly (that's how it seems to be in the rulesets).
+     * This means high-level infra is more likely to get destroyed. This is intended. */ 
+    extra_type_iterate(top) {
+      int topi = extra_index(top);
+      if (tile_has_extra(ptile, top) 
+          && BV_ISSET(extra->hidden_by, topi)) {
+
+        log_verbose("do_nuke_tile: nuking extra %s hiding %s from tile %d, %d",
+                    rule_name_get(&top->name), rule_name_get(&extra->name), TILE_XY(ptile));
+        destroy_extra(ptile, top);
+      }
+    } extra_type_iterate_end;
+
+    log_verbose("do_nuke_tile: nuking extra %s from tile %d, %d",
+                rule_name_get(&extra->name), TILE_XY(ptile));
+    destroy_extra(ptile, extra);
+  } extra_type_iterate_end;
+}
+
+/**************************************************************************
   Nuke a square: 1) remove all units on the square, and 2) halve the 
   size of the city on the square.
 
@@ -2614,6 +2660,11 @@ static void do_nuke_tile(struct player *pplayer, struct tile *ptile)
     city_reduce_size(pcity, pop_loss, pplayer, "nuke");
 
     send_city_info(NULL, pcity);
+  }
+
+  if (game.server.nuke_infra) {
+    /* Destroy infra from the countryside */
+    do_nuke_tile_extras(pplayer, ptile);
   }
 
   if (fc_rand(2) == 1) {
