@@ -2536,14 +2536,26 @@ static struct setting settings[] = {
           GAME_MIN_NUKE_IMPROVEMENTS, GAME_MAX_NUKE_IMPROVEMENTS, 
           GAME_DEFAULT_NUKE_IMPROVEMENTS)
 
-  GEN_BOOL("nuke_infra", game.server.nuke_infra,
+  GEN_INT("nuke_infra", game.server.nuke_infra,
            SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
-           N_("Whether nukes destroy tile infrastructure (roads, irrigation, etc.)"),
-           N_("If disabled, nukes will not destroy infrastructure (default). "
-              "If enabled, nukes destroy infrastructure randomly, with higher-level "
-              "infra having a greater chance of destruction. "),
-           NULL, NULL, 
+           N_("Chance of a nuke destroying tile infrastructure (roads, irrigation, etc.)"),
+           N_("If set to 0, nukes will not destroy infrastructure (default). "
+              "If greater than 0, nukes destroy infrastructure randomly, with "
+              "higher-level infra destroyed along lower-level, so having a much "
+              "greater total chance of destruction. If set to 100, nukes destroy all infra. "),
+           NULL, NULL, NULL,
+           GAME_MIN_NUKE_INFRA, GAME_MAX_NUKE_INFRA,  
            GAME_DEFAULT_NUKE_INFRA)
+
+  GEN_BOOL("nuke_infra_save_lowest", game.server.nuke_infra_save_lowest,
+           SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+           N_("Make lowest level infra immune to nuke effects (destroy Railroad, but not Road)"),
+           N_("If disabled, all infra is subject to destruction. "
+              "If enabled, lowest level infra (which doesn't hide any other infra) is immune and "
+              "the chance set by nuke_infra only applies to upper-level infra. "),
+           NULL, NULL, 
+           GAME_DEFAULT_NUKE_INFRA_SAVE_LOWEST)
+
 
   /* Meta options: these don't affect the internal rules of the game, but
    * do affect players.  Also options which only produce extra server

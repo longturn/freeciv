@@ -2551,6 +2551,9 @@ void send_all_known_units(struct conn_list *dest)
 **************************************************************************/
 static void do_nuke_tile_extras(struct player *pplayer, struct tile *ptile)
 {
+  int destroy_chance = game.server.nuke_infra;
+  bool save_lowest_tier = game.server.nuke_infra_save_lowest;
+  
   struct city *pcity = tile_city(ptile);
 
   extra_type_iterate(extra) {
@@ -2565,8 +2568,8 @@ static void do_nuke_tile_extras(struct player *pplayer, struct tile *ptile)
                   || extra_has_flag(extra, EF_ALWAYS_ON_CITY_CENTER)))
       continue;
 
-    /* destroy about half randomly */
-    if (fc_rand(100) >= 50)
+    /* destroy randomly */
+    if (fc_rand(100) >= destroy_chance)
       continue;
     
     /* If we destroy something, also destroy anything "on top" of it
@@ -2586,9 +2589,12 @@ static void do_nuke_tile_extras(struct player *pplayer, struct tile *ptile)
       }
     } extra_type_iterate_end;
 
-    log_verbose("do_nuke_tile: nuking extra %s from tile %d, %d",
-                rule_name_get(&extra->name), TILE_XY(ptile));
-    destroy_extra(ptile, extra);
+    /* or, if 'save_lowest_tier' is set, only destroy the hiding infra */
+    if (! save_lowest_tier) {
+      log_verbose("do_nuke_tile: nuking extra %s from tile %d, %d",
+                  rule_name_get(&extra->name), TILE_XY(ptile));
+      destroy_extra(ptile, extra);
+    }
   } extra_type_iterate_end;
 }
 
@@ -2662,7 +2668,7 @@ static void do_nuke_tile(struct player *pplayer, struct tile *ptile)
     send_city_info(NULL, pcity);
   }
 
-  if (game.server.nuke_infra) {
+  if (game.server.nuke_infra > 0) {
     /* Destroy infra from the countryside */
     do_nuke_tile_extras(pplayer, ptile);
   }

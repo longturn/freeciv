@@ -416,6 +416,7 @@ static void game_defaults(void)
     game.server.netwait           = GAME_DEFAULT_NETWAIT;
     game.server.nuke_improvements = GAME_DEFAULT_NUKE_IMPROVEMENTS;
     game.server.nuke_infra        = GAME_DEFAULT_NUKE_INFRA;
+    game.server.nuke_infra_save_lowest = GAME_DEFAULT_NUKE_INFRA_SAVE_LOWEST;
     game.server.occupychance      = GAME_DEFAULT_OCCUPYCHANCE;
     game.server.onsetbarbarian    = GAME_DEFAULT_ONSETBARBARIAN;
     game.server.phase_mode_stored = GAME_DEFAULT_PHASE_MODE;
