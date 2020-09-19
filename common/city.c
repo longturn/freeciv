@@ -1936,9 +1936,9 @@ citizens player_angry_citizens(const struct player *pplayer)
 int get_final_city_output_bonus(const struct city *pcity, Output_type_id otype)
 {
   struct output_type *output = &output_types[otype];
-  int bonus1 = 100 + get_city_tile_output_bonus(pcity, NULL, output,
+  int bonus1 = 100 + get_city_tile_output_bonus(pcity, pcity->tile, output,
 						EFT_OUTPUT_BONUS);
-  int bonus2 = 100 + get_city_tile_output_bonus(pcity, NULL, output,
+  int bonus2 = 100 + get_city_tile_output_bonus(pcity, pcity->tile, output,
 						EFT_OUTPUT_BONUS_2);
 
   return MAX(bonus1 * bonus2 / 100, 0);
