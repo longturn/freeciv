@@ -2556,6 +2556,13 @@ static struct setting settings[] = {
            NULL, NULL, 
            GAME_DEFAULT_NUKE_INFRA_SAVE_LOWEST)
 
+  GEN_BOOL("default_diplstate_is_peace", game.server.default_diplstate_is_peace,
+           SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+           N_("Make default diplomatic state (on first contact) peace"),
+           N_("If enabled, diplomatic state after first contact is Armistice, then Peace. "
+              "If disabled, initial diplomatic state is War (default behaviour). "),
+           NULL, NULL, 
+           GAME_DEFAULT_DEFAULT_DIPLSTATE_IS_PEACE)
 
   /* Meta options: these don't affect the internal rules of the game, but
    * do affect players.  Also options which only produce extra server

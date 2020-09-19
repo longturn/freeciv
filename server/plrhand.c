@@ -110,6 +110,9 @@ static int shuffled_order[MAX_NUM_PLAYER_SLOTS];
 /* Used by player_info_freeze() and player_info_thaw(). */
 static int player_info_frozen_level = 0;
 
+/* FIXME: this duplicates TURNS_LEFT in diplhand.c, and should be configurable */
+#define TURNS_LEFT 16
+
 /**************************************************************************
   Murder a player in cold blood.
 
@@ -1971,7 +1974,8 @@ void server_player_set_name(struct player *pplayer, const char *name)
   Returns the default diplomatic state between 2 players.
 
   Mainly, this returns DS_WAR, but it can also return DS_PEACE if both
-  players are allied with the same third player.
+  players are allied with the same third player, or DS_ARMISTICE if
+  'default_diplstate_is_peace' is set.
 **************************************************************************/
 static enum diplstate_type
 get_default_diplstate(const struct player *pplayer1,
@@ -1986,7 +1990,11 @@ get_default_diplstate(const struct player *pplayer1,
     }
   } players_iterate_alive_end;
 
-  return DS_WAR;
+  if (game.server.default_diplstate_is_peace) {
+    return DS_ARMISTICE;
+  }
+  
+  return DS_WAR; 
 }
 
 /**************************************************************************
@@ -2017,8 +2025,13 @@ void make_contact(struct player *pplayer1, struct player *pplayer2,
 
     ds_plr1plr2->type = new_state;
     ds_plr2plr1->type = new_state;
+    if (new_state == DS_ARMISTICE || new_state == DS_CEASEFIRE) {
+        ds_plr1plr2->turns_left = TURNS_LEFT;
+        ds_plr2plr1->turns_left = TURNS_LEFT;
+    }
     ds_plr1plr2->first_contact_turn = game.info.turn;
     ds_plr2plr1->first_contact_turn = game.info.turn;
+    
     notify_player(pplayer1, ptile, E_FIRST_CONTACT, ftc_server,
                   _("You have made contact with the %s, ruled by %s."),
                   nation_plural_for_player(pplayer2),

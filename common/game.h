@@ -167,6 +167,7 @@ struct civ_game {
       int nuke_improvements;
       int nuke_infra;
       bool nuke_infra_save_lowest;
+      bool default_diplstate_is_peace;
       int occupychance;
       int onsetbarbarian;
       int pingtime;
@@ -637,6 +638,8 @@ extern struct civ_game game;
 #define GAME_MAX_NUKE_INFRA            100
 
 #define GAME_DEFAULT_NUKE_INFRA_SAVE_LOWEST  FALSE
+
+#define GAME_DEFAULT_DEFAULT_DIPLSTATE_IS_PEACE  FALSE
 
 #define GAME_DEFAULT_OCCUPYCHANCE    0
 #define GAME_MIN_OCCUPYCHANCE        0
