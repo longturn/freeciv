@@ -1078,6 +1078,22 @@ static void package_player_common(struct player *plr,
   packet->science_cost = plr->ai_common.science_cost;
 }
 
+
+/*************************************************************************
+  Check if receiver can get intel on plr based on contact.
+  this is limited by having had contact recently, and the
+  contact_intel server setting.
+  
+  Used by package_player_info() and package_player_diplstate(). 
+*************************************************************************/
+static bool contact_turns_intel(struct player *plr,
+                                struct player *receiver)
+{
+  return (receiver 
+          && player_diplstate_get(receiver, plr)->contact_turns_left > 0
+          && game.server.contact_intel);
+}
+
 /**************************************************************************
   Package player info depending on info_level. We send everything to
   plr's connections, we send almost everything to players with embassy
@@ -1173,9 +1189,9 @@ static void package_player_info(struct player *plr,
    
   /* Send diplomatic status of the player to everyone they are in
    * contact with. */
+  /* Should this just check for INFO_MEETING? */
   if (info_level >= INFO_EMBASSY
-      || (receiver
-          && player_diplstate_get(receiver, plr)->contact_turns_left > 0)) {
+        || contact_turns_intel(plr, receiver)) {
     packet->target_government = plr->target_government
                                 ? government_number(plr->target_government)
                                 : government_count();
@@ -1270,8 +1286,7 @@ static void package_player_diplstate(struct player *plr1,
   /* Send diplomatic status of the player to everyone they are in
    * contact with (embassy, remaining contact turns, the receiver). */
   if (info_level >= INFO_EMBASSY
-      || (receiver
-          && player_diplstate_get(receiver, plr1)->contact_turns_left > 0)
+      || contact_turns_intel(plr1, receiver) 
       || (receiver && receiver == plr2)) {
     packet_ds->type                 = ds->type;
     packet_ds->turns_left           = ds->turns_left;
@@ -1300,7 +1315,8 @@ static enum plr_info_level player_info_level(struct player *plr,
   if (receiver && player_has_embassy(receiver, plr)) {
     return INFO_EMBASSY;
   }
-  if (receiver && could_intel_with_player(receiver, plr)) {
+  if (receiver && could_intel_with_player(receiver, plr)
+      && game.server.contact_intel) {
     return INFO_MEETING;
   }
   return INFO_MINIMUM;

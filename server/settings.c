@@ -2564,6 +2564,15 @@ static struct setting settings[] = {
            NULL, NULL, 
            GAME_DEFAULT_DEFAULT_DIPLSTATE_IS_PEACE)
 
+  GEN_BOOL("contact_intel", game.server.contact_intel,
+           SSET_RULES_FLEXIBLE, SSET_MILITARY, SSET_RARE, SSET_TO_CLIENT,
+           N_("Having contact allows gaining some intel on the other nation"),
+           N_("If enabled (default), having contact with a nation allows viewing their "
+              "government, gold and diplomatic relations. If disabled, no intel is available "
+              "without an embassy. "),
+           NULL, NULL, 
+           GAME_DEFAULT_CONTACT_INTEL)
+
   /* Meta options: these don't affect the internal rules of the game, but
    * do affect players.  Also options which only produce extra server
    * "output" and don't affect the actual game.

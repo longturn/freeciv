@@ -418,6 +418,7 @@ static void game_defaults(void)
     game.server.nuke_infra        = GAME_DEFAULT_NUKE_INFRA;
     game.server.nuke_infra_save_lowest = GAME_DEFAULT_NUKE_INFRA_SAVE_LOWEST;
     game.server.default_diplstate_is_peace = GAME_DEFAULT_DEFAULT_DIPLSTATE_IS_PEACE;
+    game.server.contact_intel     = GAME_DEFAULT_CONTACT_INTEL;
     game.server.occupychance      = GAME_DEFAULT_OCCUPYCHANCE;
     game.server.onsetbarbarian    = GAME_DEFAULT_ONSETBARBARIAN;
     game.server.phase_mode_stored = GAME_DEFAULT_PHASE_MODE;
