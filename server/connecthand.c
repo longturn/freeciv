@@ -269,12 +269,12 @@ void establish_new_connection(struct connection *pconn)
   if (conn_controls_player(pconn)) {
     package_event(&connect_info, NULL, E_CONNECTION, ftc_server,
                   _("%s has connected from %s (player %s)."),
-                  pconn->username, pconn->addr,
+                  pconn->username, conn_addr_public(pconn),
                   player_name(conn_get_player(pconn)));
   } else {
     package_event(&connect_info, NULL, E_CONNECTION, ftc_server,
                   _("%s has connected from %s."),
-                  pconn->username, pconn->addr);
+                  pconn->username, conn_addr_public(pconn));
   }
   conn_list_iterate(game.est_connections, aconn) {
     if (aconn != pconn) {
@@ -456,16 +456,14 @@ bool handle_login_request(struct connection *pconn,
 ****************************************************************************/
 void lost_connection_to_client(struct connection *pconn)
 {
-  const char *desc = conn_description(pconn);
-
   fc_assert_ret(TRUE == pconn->server.is_closing);
 
-  log_normal(_("Lost connection: %s."), desc);
+  log_normal(_("Lost connection: %s."), conn_description(pconn));
 
   /* Special color (white on black) for player loss */
   notify_conn(game.est_connections, NULL, E_CONNECTION,
               conn_controls_player(pconn) ? ftc_player_lost : ftc_server,
-              _("Lost connection: %s."), desc);
+              _("Lost connection: %s."), conn_description_public(pconn));
 
   connection_detach(pconn, TRUE);
   send_conn_info_remove(pconn->self, game.est_connections);
@@ -490,7 +488,7 @@ static void package_conn_info(struct connection *pconn,
   packet->access_level = pconn->access_level;
 
   sz_strlcpy(packet->username, pconn->username);
-  sz_strlcpy(packet->addr, pconn->addr);
+  sz_strlcpy(packet->addr, conn_addr_public(pconn));
   sz_strlcpy(packet->capability, pconn->capability);
 }
 

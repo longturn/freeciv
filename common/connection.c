@@ -459,16 +459,25 @@ static void free_socket_packet_buffer(struct socket_packet_buffer *buf)
   Note that when pconn is client.conn (connection to server),
   pconn->name and pconn->addr contain empty string, and pconn->playing
   is NULL: in this case return string "server".
+  
+  If 'private' is true, show the actual hostname, otherwise mask it.
+  Use the helper macros conn_description() and conn_description_public().
 **************************************************************************/
-const char *conn_description(const struct connection *pconn)
+const char *conn_description_real(const struct connection *pconn, bool private)
 {
   static char buffer[MAX_LEN_NAME*2 + MAX_LEN_ADDR + 128];
+  const char *addr = NULL;
+  if (private) {
+    addr = pconn->addr;
+  } else {
+    addr = conn_addr_public(pconn);
+  }
 
   buffer[0] = '\0';
 
   if (*pconn->username != '\0') {
     fc_snprintf(buffer, sizeof(buffer), _("%s from %s"),
-                pconn->username, pconn->addr); 
+                pconn->username, addr); 
   } else {
     sz_strlcpy(buffer, "server");
   }
@@ -915,3 +924,14 @@ bool conn_is_valid(const struct connection *pconn)
 {
   return (pconn && pconn->used && !pconn->server.is_closing);
 }
+
+/**************************************************************************
+  Generate a fake hostname to tell publicly.
+**************************************************************************/
+const char *conn_addr_public(const struct connection *pconn)
+{
+  static char buf[256];
+  snprintf(buf, 256, "user-%s-host", pconn->username);
+  return buf;
+}
+

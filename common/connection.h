@@ -310,10 +310,13 @@ bool conn_compression_frozen(const struct connection *pconn);
 void conn_list_compression_freeze(const struct conn_list *pconn_list);
 void conn_list_compression_thaw(const struct conn_list *pconn_list);
 
-const char *conn_description(const struct connection *pconn);
+const char *conn_description_real(const struct connection *pconn, bool private);
 bool conn_controls_player(const struct connection *pconn);
 bool conn_is_global_observer(const struct connection *pconn);
 enum cmdlevel conn_get_access(const struct connection *pconn);
+
+#define conn_description_public(pconn) conn_description_real(pconn, FALSE)
+#define conn_description(pconn)        conn_description_real(pconn, TRUE)
 
 struct player;
 struct player *conn_get_player(const struct connection *pconn);
@@ -362,6 +365,8 @@ struct conn_pattern *conn_pattern_from_string(const char *pattern,
                                               size_t error_buf_len);
 
 bool conn_is_valid(const struct connection *pconn);
+
+const char *conn_addr_public(const struct connection *pconn);
 
 #ifdef __cplusplus
 }

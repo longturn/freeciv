@@ -1458,7 +1458,7 @@ static void send_ping_times_to_all(void)
     }
     fc_assert(i < ARRAY_SIZE(packet.conn_id));
     packet.conn_id[i] = pconn->id;
-    packet.ping_time[i] = pconn->ping_time;
+    packet.ping_time[i] = 1;
     i++;
   } conn_list_iterate_end;
   packet.connections = i;
