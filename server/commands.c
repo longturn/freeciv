@@ -516,11 +516,35 @@ static struct command commands[] = {
       "To list the player colors, use 'list colors'."), NULL,
    CMD_ECHO_NONE, VCF_NONE, 0
   },
+  {"showtimeout", ALLOW_ADMIN,
+   /* TRANS: translate text between <> */
+   N_("showtimeout"),
+   N_("Show timeout settings and timers."),
+   N_("/showtimeout shows the 'timeout' setting; how long the current "
+      "phase has lasted; and the time until it ends, from phase start "
+      "and from the current time. "), NULL,
+   CMD_ECHO_ALL, VCF_NONE, 0
+  },
+  {"fixtimeout", ALLOW_ADMIN,
+   /* TRANS: translate text between <> */
+   N_("fixtimeout <seconds>"),
+   N_("Set remaining timeout of current turn to N seconds."),
+   N_("/fixtimeout modifies the remaining timeout for the current turn only. "
+      "The argument gives the time the turn should end, in seconds from now. "
+      "Timeouts for future turns are not affected."), NULL,
+   CMD_ECHO_ALL, VCF_NONE, 0
+  },
   {"syncturn", ALLOW_ADMIN,
    /* TRANS: translate text between <> */
-   N_("syncturn <multiplier>"),
-   N_("Synchronize timeout."),
-   N_("See the source code for more information."), NULL,
+   N_("syncturn ['show' | min time]"),
+   N_("Synchronize timeout to global schedule."),
+   N_("/syncturn synchronises the turn timeout to a global schedule "
+      "based on the game number (port number) and timeout length. "
+      "The optional parameter gives the minimum time that should be "
+      "left before the current turn ends, in multiples of the "
+      "'timeout' setting. Use '/syncturn show' to see the time of "
+      "the next sync point. Default is to sync with at least "
+      "0.8 x timeout remaining of the current turn. "), NULL,
    CMD_ECHO_ALL, VCF_NONE, 0
   },
   {"autocreate", ALLOW_ADMIN,

@@ -4102,17 +4102,109 @@ static bool playercolor_command(struct connection *caller,
 
   return ret;
 }
+
+/****************************************************************************
+  /showtimeout command. 
+  -- Show the current turn timers and timeout
+****************************************************************************/
+static bool showtimeout_command(struct connection *caller, char *arg, bool check)
+{
+  int phase_timer;
+  int timeout;
+  int end_time;
+  char buf[128];
+  
+  timeout = game.info.timeout;
+  
+  format_time_duration(timeout, buf, 127);
+  cmd_reply(CMD_SHOWTIMEOUT, caller, C_OK, 
+            _("'timeout' setting is:          %6d s = %s"), timeout, buf);
+
+  if (server_state() != S_S_RUNNING) {
+    cmd_reply(CMD_FIXTIMEOUT, caller, C_OK, _("Game is not running so phase timers are meaningless."));
+    return TRUE;
+  } 
+
+  phase_timer = timer_read_seconds(game.server.phase_timer);
+  end_time = game.tinfo.seconds_to_phasedone;
+
+  format_time_duration(phase_timer, buf, 127);
+  cmd_reply(CMD_SHOWTIMEOUT, caller, C_OK, 
+            _("Current phase has now lasted:  %6d s = %s"), phase_timer, buf);
+
+  format_time_duration(end_time, buf, 127);
+  cmd_reply(CMD_SHOWTIMEOUT, caller, C_OK, 
+            _("Phase end from start of phase: %6d s = %s"), end_time, buf);
+
+  format_time_duration(end_time - phase_timer, buf, 127);
+  cmd_reply(CMD_SHOWTIMEOUT, caller, C_OK, 
+            _("Phase end from now:            %6d s = %s"), end_time - phase_timer, buf);
+
+  return TRUE;
+}
+
+/****************************************************************************
+  /fixtimeout command. 
+  -- Set the remaining timeout for the current turn only
+****************************************************************************/
+static bool fixtimeout_command(struct connection *caller, char *arg, bool check)
+{
+  int offset = 0;
+  int timer_now;
+
+  if (server_state() != S_S_RUNNING) {
+    cmd_reply(CMD_FIXTIMEOUT, caller, C_FAIL, 
+              _("Cannot fix timeout, game is not running."));
+    return FALSE;
+  }
+
+  timer_now = timer_read_seconds(game.server.phase_timer);
+
+  if (strlen(arg) > 0) {
+    sscanf(arg, "%d", &offset);
+  }
+
+  if (offset <= 0 || offset > 86400*365) {
+    cmd_reply(CMD_FIXTIMEOUT, caller, C_FAIL, 
+              _("Invalid or missing offset value"));
+    return FALSE;
+  }
+
+  game.tinfo.seconds_to_phasedone = timer_now + offset;
+
+  cmd_reply(CMD_FIXTIMEOUT, caller, C_OK, 
+            _("Setting remaining turn timeout to %d seconds"), (int) offset);
+  
+  /* send everyone the updated timeout */
+  send_game_info(NULL);
+  
+  return TRUE;
+}
+
 /****************************************************************************
   /syncturn command handler.
+  Change the timeout of the current turn to match a global schedule
+  calculated from the game port number, and the timeout length.
 ****************************************************************************/
 static bool syncturn_command(struct connection *caller, char *arg, bool check)
 {
-  int newtimeout;
-  int now;
+  int new_time_remaining;
+  int gamenum;
+  time_t now, fudge, syncpoint;
   float min = 0.8;
+  int phase_timer;
+  char buf[128];
+  int increments = 0;
+  struct tm stm;
+  int show_only = 0;
 
   if (check) {
     return TRUE;
+  }
+
+  if (server_state() != S_S_RUNNING) {
+    cmd_reply(CMD_FIXTIMEOUT, caller, C_FAIL, _("Cannot sync turn, game is not running."));
+    return FALSE;
   }
 
   if (game.info.timeout == 0) {
@@ -4120,33 +4212,70 @@ static bool syncturn_command(struct connection *caller, char *arg, bool check)
     return FALSE;
   }
 
-  if (strlen(arg) > 0) {
-    sscanf(arg, "%f", &min);
-    if (min < 0.01 || min > 10) {
-      cmd_reply(CMD_SYNCTURN, caller, C_FAIL, _("The value \"%f\" doesn't make much sense"), min);
+  if (strcmp(arg, "show") == 0) {
+    show_only = 1;
+  } else if (strlen(arg) > 0) {
+    if (sscanf(arg, "%f", &min) != 1 || min < 0.01 || min > 30) {
+      cmd_reply(CMD_SYNCTURN, caller, C_FAIL, _("Invalid argument; should be 'show' or a number >= 0.01 and <= 30"));
       return FALSE;
     }
   }
 
-  now = time(NULL) + (srvarg.port % 10) * (2 * 60 * 60);
-  now %= game.info.timeout;
-  newtimeout = game.info.timeout - now;
+  /* We update seconds_to_phasedone below, the time from phase _start_ when 
+   * the phase ends so we need to find out how long the phase has now lasted.
+   */
+  phase_timer = timer_read_seconds(game.server.phase_timer);
 
-  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("Old timeout: %02d:%02d:%02d"),
-    (int)game.tinfo.seconds_to_phasedone/60/60,
-    (int)game.tinfo.seconds_to_phasedone/60 % 60,
-    (int)game.tinfo.seconds_to_phasedone % 60);
-  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("New timeout: %02d:%02d:%02d"),
-    newtimeout/60/60, newtimeout/60 % 60, newtimeout % 60);
-  while (newtimeout < min * game.info.timeout) {
-    newtimeout += game.info.timeout;
-    cmd_reply(CMD_SYNCTURN, caller, C_OK, _("Adding timeout"));
+#if 0
+  int old_time_remaining = game.tinfo.seconds_to_phasedone - phase_timer;
+  format_time_duration(old_time_remaining, buf, 127);
+  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("Time left was %s"), buf); */
+#endif
+
+
+  /* sync to a 'global schedule', but fudge the time based on game 
+     number, so that not all games change turn at the same time */
+  gamenum = srvarg.port % 10;
+  now = time(NULL);
+  fudge = gamenum * (2 * 60 * 60);
+
+  new_time_remaining = game.info.timeout - ((now + fudge) % game.info.timeout);
+
+  syncpoint = now + new_time_remaining;
+  stm = *gmtime(&syncpoint);
+  strftime(buf, 127, "%F %T %z", &stm);
+  cmd_reply(CMD_FIXTIMEOUT, caller, C_FAIL, _("Next sync point for game #%d is at %s"), 
+            gamenum, buf);
+
+  if (show_only) {
+    return TRUE;
   }
-  game.tinfo.seconds_to_phasedone = newtimeout;
 
-  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("New turn in %02d hours, %02d minutes"),
-            (int)game.tinfo.seconds_to_phasedone/60/60,
-            (int)game.tinfo.seconds_to_phasedone/60 % 60);
+  while (new_time_remaining < min * game.info.timeout) {
+    new_time_remaining += game.info.timeout;
+    increments += 1;
+  }
+
+  if (increments > 0) {
+    cmd_reply(CMD_SYNCTURN, caller, C_OK, 
+              _("Adding %d full timeout(s) to fill minimum length"), increments);
+  }
+  
+  
+  /* Commit the new time */
+  game.tinfo.seconds_to_phasedone = phase_timer + new_time_remaining;
+
+  syncpoint = now + new_time_remaining;
+  stm = *gmtime(&syncpoint);
+  strftime(buf, 127, "%F %T %z", &stm);
+  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("New turn end at %s"), buf);
+  
+  format_time_duration(new_time_remaining, buf, 127);
+  cmd_reply(CMD_SYNCTURN, caller, C_OK, _("(after %s from now)"), buf);
+
+
+  /* send everyone the updated timeout */
+  send_game_info(NULL);
 
   return TRUE;
 }
@@ -4544,6 +4673,10 @@ static bool handle_stdin_input_real(struct connection *caller, char *str,
     return unignore_command(caller, arg, check);
   case CMD_PLAYERCOLOR:
     return playercolor_command(caller, arg, check);
+  case CMD_SHOWTIMEOUT:
+    return showtimeout_command(caller, arg, check);
+  case CMD_FIXTIMEOUT:
+    return fixtimeout_command(caller, arg, check);
   case CMD_SYNCTURN:
     return syncturn_command(caller, arg, check);
   case CMD_AUTOCREATE:
