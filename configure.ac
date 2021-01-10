@@ -1302,6 +1302,10 @@ AC_CHECK_FUNCS([bind connect fileno flock ftime gethostbyname gethostname \
                 getline _strcoll stricoll _stricoll strcasecoll \
                 backtrace])
 
+dnl Possible random sources on Unixen
+AC_CHECK_FUNCS([getentropy clock_gettime])
+AC_CHECK_FILES([/dev/urandom])
+
 dnl Possible "-Wmissing-declarations" and "-Werror" will prune out
 dnl cases where we should not use _mkdir() even if it's possible to link against it
 fc_save_CPPFLAGS="$CPPFLAGS"
