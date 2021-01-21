@@ -1328,15 +1328,17 @@ void unit_activity_astr(const struct unit *punit, struct astring *astr)
   switch (punit->activity) {
   case ACTIVITY_IDLE:
     if (utype_fuel(unit_type_get(punit))) {
-      int rate, f;
+      int f;
 
-      rate = unit_type_get(punit)->move_rate;
+      /* Rate has been commented out because showing fuel as number of turns 
+         doesnt need rate */
+      // int rate;
+      // rate = unit_type_get(punit)->move_rate;
       f = ((punit->fuel) - 1);
 
       /* Add in two parts as move_points_text() returns ptr to static
        * End result: "Moves: (fuel)moves_left" */
-      astr_add_line(astr, "%s: (%s)", _("Moves"),
-                    move_points_text((rate * f) + punit->moves_left, FALSE));
+      astr_add_line(astr, "%s: (Fuel: %d T)", _("Moves"), f);
       astr_add(astr, "%s",
                move_points_text(punit->moves_left, FALSE));
     } else {
