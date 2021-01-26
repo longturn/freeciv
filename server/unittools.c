@@ -3357,6 +3357,12 @@ static void wakeup_neighbor_sentries(struct unit *punit)
           && can_unit_exist_at_tile(penemy, unit_tile(penemy))) {
         set_unit_activity(penemy, ACTIVITY_IDLE);
         send_unit_info(NULL, penemy);
+        notify_player(unit_owner(penemy), unit_tile(punit),
+                    E_UNIT_ORDERS, ftc_server,
+                    _("%s sentry wokeup after enemy (v%d %s | hp: %d | pos: (%d, %d)) movement was "
+                        "spotted."),
+                      unit_link(penemy), punit->veteran, unit_name_translation(punit), punit->hp, index_to_map_pos_x(unit_tile(punit)->index),
+                      index_to_map_pos_y(unit_tile(punit)->index));
       }
     } unit_list_iterate_end;
   } square_iterate_end;
