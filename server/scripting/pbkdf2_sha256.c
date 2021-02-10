@@ -28,7 +28,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#if !defined(FREECIV_MSWINDOWS) && !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32_NATIVE)
 #include <endian.h>
+#endif
 
 #include "pbkdf2_sha256.h"
 
