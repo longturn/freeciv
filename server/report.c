@@ -197,7 +197,7 @@ static struct dem_row {
   {'R', N_("Research Speed"),   get_research,    science_to_text,     TRUE },
   {'M', N_("Military Service"), get_mil_service, mil_service_to_text, FALSE },
   {'m', N_("Military Units"),   get_mil_units,   mil_units_to_text,   TRUE },
-  {'b', N_("Built Units"),      get_units_built,   mil_units_to_text,   TRUE },
+  {'u', N_("Built Units"),      get_units_built,   mil_units_to_text,   TRUE },
   {'k', N_("Killed Units"),     get_units_killed,   mil_units_to_text,   TRUE },
   {'l', N_("Lost Units"),       get_units_lost,   mil_units_to_text,   TRUE },
   {'O', N_("Pollution"),        get_pollution,   pollution_to_text,   TRUE },
