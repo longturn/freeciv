@@ -147,6 +147,9 @@ static int get_cities(const struct player *pplayer);
 static int get_improvements(const struct player *pplayer);
 static int get_all_wonders(const struct player *pplayer);
 static int get_mil_units(const struct player *pplayer);
+static int get_units_built(const struct player *pplayer);
+static int get_units_killed(const struct player *pplayer);
+static int get_units_lost(const struct player *pplayer);
 
 
 static const char *area_to_text(int value);
@@ -194,6 +197,9 @@ static struct dem_row {
   {'R', N_("Research Speed"),   get_research,    science_to_text,     TRUE },
   {'M', N_("Military Service"), get_mil_service, mil_service_to_text, FALSE },
   {'m', N_("Military Units"),   get_mil_units,   mil_units_to_text,   TRUE },
+  {'b', N_("Built Units"),      get_units_built,   mil_units_to_text,   TRUE },
+  {'k', N_("Killed Units"),     get_units_killed,   mil_units_to_text,   TRUE },
+  {'l', N_("Lost Units"),       get_units_lost,   mil_units_to_text,   TRUE },
   {'O', N_("Pollution"),        get_pollution,   pollution_to_text,   FALSE },
   {'C', N_("Culture"),          get_culture,     culture_to_text,     TRUE }
 };
