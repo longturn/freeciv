@@ -200,7 +200,7 @@ static struct dem_row {
   {'b', N_("Built Units"),      get_units_built,   mil_units_to_text,   TRUE },
   {'k', N_("Killed Units"),     get_units_killed,   mil_units_to_text,   TRUE },
   {'l', N_("Lost Units"),       get_units_lost,   mil_units_to_text,   TRUE },
-  {'O', N_("Pollution"),        get_pollution,   pollution_to_text,   FALSE },
+  {'O', N_("Pollution"),        get_pollution,   pollution_to_text,   TRUE },
   {'C', N_("Culture"),          get_culture,     culture_to_text,     TRUE }
 };
 
