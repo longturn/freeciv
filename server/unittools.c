@@ -3359,8 +3359,7 @@ static void wakeup_neighbor_sentries(struct unit *punit)
         send_unit_info(NULL, penemy);
         notify_player(unit_owner(penemy), unit_tile(punit),
                     E_UNIT_ORDERS, ftc_server,
-                    _("%s sentry wokeup after enemy (%s v%d %s| id: %d | hp: %d | pos: (%d, %d)) movement was "
-                        "spotted."),
+                    _("Your %s spotted  a %s v%d %s [id:%d hp:%d] at (%d,%d) "),
                       unit_link(penemy), nation_adjective_for_player(unit_owner(punit)) ,punit->veteran, unit_name_translation(punit), punit->id, punit->hp, index_to_map_pos_x(unit_tile(punit)->index),
                       index_to_map_pos_y(unit_tile(punit)->index));
       }
