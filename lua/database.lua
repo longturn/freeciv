@@ -108,7 +108,10 @@ end
 -- Check if user exists.
 function user_exists(conn)
   if not dbh then
-    error("Missing database connection...")
+    database_init()
+    if not dbh then
+      error("missing database connection...")
+    end
   end
 
   local username = dbh:escape(auth.get_username(conn))
@@ -125,7 +128,10 @@ end
 -- Check user password.
 function user_verify(conn, plaintext)
   if not dbh then
-    error("Missing database connection...")
+    database_init()
+    if not dbh then
+      error("missing database connection...")
+    end
   end
 
   local username = dbh:escape(auth.get_username(conn))
@@ -185,7 +191,10 @@ end
 
 function user_take(conn, player, observer)
   if not dbh then
-    error("Missing database connection...")
+    database_init()
+    if not dbh then
+      error("missing database connection...")
+    end
   end
 
   local taker = auth.get_username(conn)
